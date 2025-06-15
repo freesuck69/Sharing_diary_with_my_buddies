@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>나의 다이어리</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- 폰트 -->
+  <link href="https://fonts.googleapis.com/css2?family=Poor+Story&family=Gamja+Flower&family=Nanum+Pen+Script&display=swap" rel="stylesheet" />
+  <script src="https://developers.kakao.com/sdk/js/kakao.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+  <style>
+    :root {
+      --bg-light: #f5f5f5;
+      --text-light: #222;
+      --card-light: #fff;
+
+      --bg-dark: #162536;
+      --text-dark: #f5f5f5;
+      --card-dark: #1e3652;
+
+      --accent-color: #3d8bff;
+    }
+
+    body.light {
+      background-color: var(--bg-light);
+      color: var(--text-light);
+    }
+
+    body.dark {
+      background-color: var(--bg-dark);
+      color: var(--text-dark);
+    }
+
+    body {
+      margin: 0;
+      padding: 20px;
+      font-family: 'Poor Story', sans-serif;
+      text-align: center;
+      transition: background-color 0.3s, color 0.3s;
+    }
+
+    h1 {
+      font-size: 2.2rem;
+      margin-bottom: 20px;
+    }
+
+    .controls {
+      margin-bottom: 15px;
+    }
+
+    select, button, input[type="file"] {
+      padding: 8px 12px;
+      font-size: 1rem;
+      margin: 5px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+    }
+
+    button {
+      background-color: var(--accent-color);
+      color: white;
+    }
+
+    #capture-area {
+      width: 360px;
+      height: 640px;
+      margin: 0 auto;
+      border-radius: 20px;
+      padding: 20px;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      align-items: center;
+      position: relative;
+      transition: background-color 0.3s;
+    }
+
+    body.light #capture-area {
+      background-color: var(--card-light);
+      color: var(--text-light);
+    }
+
+    body.dark #capture-area {
+      background-color: var(--card-dark);
+      color: var(--text-dark);
+    }
+
+    #date-display {
+      font-family: 'Arial', sans-serif;
+      font-size: 18px;
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+
+    #uploaded-image {
+      max-width: 100%;
+      max-height: 150px;
+      border-radius: 10px;
+      margin-bottom: 10px;
+      object-fit: cover;
+    }
+
+    textarea {
+      width: 100%;
+      height: 100%;
+      background: transparent;
+      border: none;
+      resize: none;
+      outline: none;
+      font-size: 22px;
+      line-height: 1.6;
+      font-family: inherit;
+    }
+
+    @media (max-width: 420px) {
+      #capture-area {
+        width: 90%;
+        height: auto;
+      }
+    }
+  </style>
+</head>
+<body class="dark">
+  <h1>나의 다이어리 📖</h1>
+
+  <div class="controls">
+    <label>🖋 폰트:</label>
+    <select id="font-family-select">
+      <option value="'Poor Story', sans-serif">Poor Story</option>
+      <option value="'Gamja Flower', sans-serif">Gamja Flower</option>
+      <option value="'Nanum Pen Script', cursive">Nanum Pen Script</option>
+    </select>
+
+    <label>🅰️ 글자 크기:</label>
+    <select id="font-size-select">
+      <option value="18px">작게</option>
+      <option value="22px" selected>보통</option>
+      <option value="26px">크게</option>
+      <option value="30px">아주 크게</option>
+    </select>
+
+    <button id="toggle-mode-btn">☀️ 라이트모드</button><br>
+
+    <input type="file" id="image-upload" accept="image/*" />
+  </div>
+
+  <div id="capture-area">
+    <div id="date-display"></div>
+    <img id="uploaded-image" style="display:none;" />
+    <textarea id="diary-input" placeholder="오늘 하루 어땠나요? :)"></textarea>
+  </div>
+
+  <div>
+    <button id="save-img-btn">📸 이미지 저장</button>
+    <button id="kakao-share-btn">📤 카카오톡 공유</button>
+  </div>
+
+  <script>
+    Kakao.init('f483f6c2f2d5a049a270bb710a6467ef');
+
+    // 날짜 표기
+    function updateDateDisplay() {
+      const dateEl = document.getElementById('date-display');
+      const now = new Date();
+      const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+      const formatted = `${now.getFullYear()}.${String(now.getMonth()+1).padStart(2, '0')}.${String(now.getDate()).padStart(2, '0')} (${days[now.getDay()]})`;
+      dateEl.textContent = formatted;
+    }
+    updateDateDisplay();
+
+    // 다크모드 전환
+    document.getElementById('toggle-mode-btn').addEventListener('click', () => {
+      const body = document.body;
+      body.classList.toggle('dark');
+      body.classList.toggle('light');
+      const isDark = body.classList.contains('dark');
+      document.getElementById('toggle-mode-btn').textContent = isDark ? '☀️ 라이트모드' : '🌙 다크모드';
+    });
+
+    // 폰트 설정
+    document.getElementById('font-family-select').addEventListener('change', e => {
+      document.getElementById('diary-input').style.fontFamily = e.target.value;
+    });
+    document.getElementById('font-size-select').addEventListener('change', e => {
+      document.getElementById('diary-input').style.fontSize = e.target.value;
+    });
+
+    // 이미지 업로드
+    document.getElementById('image-upload').addEventListener('change', function () {
+      const file = this.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function (e) {
+          const img = document.getElementById('uploaded-image');
+          img.src = e.target.result;
+          img.style.display = 'block';
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+
+    // 이미지 저장
+    document.getElementById('save-img-btn').addEventListener('click', function () {
+      html2canvas(document.getElementById('capture-area'), {
+        backgroundColor: null,
+        scale: 2
+      }).then(canvas => {
+        const link = document.createElement('a');
+        link.download = 'my_diary.png';
+        link.href = canvas.toDataURL();
+        link.click();
+      });
+    });
+
+    // 카카오 공유
+    document.getElementById('kakao-share-btn').addEventListener('click', function () {
+      const diaryText = document.getElementById('diary-input').value.trim();
+      if (diaryText === '') {
+        alert('일기를 먼저 써주세요!');
+        return;
+      }
+
+      Kakao.Link.sendDefault({
+        objectType: 'feed',
+        content: {
+          title: '나의 일기 공유',
+          description: diaryText,
+          imageUrl: 'https://source.unsplash.com/400x200/?diary',
+          link: {
+            mobileWebUrl: 'https://yourdiarypage.com',
+            webUrl: 'https://yourdiarypage.com'
+          }
+        },
+        buttons: [
+          {
+            title: '일기장 가기',
+            link: {
+              mobileWebUrl: 'https://yourdiarypage.com',
+              webUrl: 'https://yourdiarypage.com'
+            }
+          }
+        ]
+      });
+    });
+  </script>
+</body>
+</html>
